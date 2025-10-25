@@ -1,4 +1,10 @@
 @extends('master')
 @section('content')
-    <h1 class="text-center">Welcome to Polymorphic Relationship Example</h1>
+    <div class="mt-5 d-flex justify-content-end">
+
+    </div>
+   <!-- Button trigger modal -->
+
+    <!-- Modal -->
+
 @endsection
