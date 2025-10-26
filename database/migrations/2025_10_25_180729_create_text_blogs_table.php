@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('text_blogs', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->text('content');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

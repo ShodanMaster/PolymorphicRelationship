@@ -52,55 +52,55 @@
         </div>
     </nav>
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
 
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="exampleModalLabel">Add Content</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
-            <div class="modal-body">
-                <!-- Toggle buttons -->
-                <div class="mb-3 text-center">
-                    <button id="formTextBtn" class="btn btn-outline-primary active">Text Form</button>
-                    <button id="formImageBtn" class="btn btn-outline-secondary">Image Form</button>
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Add Content</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <!-- Form 1: Title + Textarea -->
-                <form id="textForm">
-                    <div class="mb-3">
-                        <label for="textTitle" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="textTitle" placeholder="Enter title">
+                <div class="modal-body">
+                    <!-- Toggle buttons -->
+                    <div class="mb-3 text-center">
+                        <button id="formTextBtn" class="btn btn-outline-primary active">Text Form</button>
+                        <button id="formImageBtn" class="btn btn-outline-secondary">Image Form</button>
                     </div>
-                    <div class="mb-3">
-                        <label for="textContent" class="form-label">Content</label>
-                        <textarea class="form-control" id="textContent" rows="4" placeholder="Enter text..."></textarea>
-                    </div>
-                </form>
 
-                <!-- Form 2: Title + Image Upload + Preview -->
-                <form id="imageForm" class="d-none">
-                    <div class="mb-3">
-                        <label for="imageTitle" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="imageTitle" placeholder="Enter title">
-                    </div>
-                    <div class="mb-3">
-                        <label for="imageUpload" class="form-label">Upload Image</label>
-                        <input class="form-control" type="file" id="imageUpload" accept="image/*">
-                    </div>
-                    <div class="text-center">
-                        <img id="imagePreview" src="" alt="Preview" class="img-fluid rounded d-none" style="max-height: 250px;">
-                    </div>
-                </form>
-            </div>
+                    <!-- Form 1: Title + Textarea -->
+                    <form id="textForm">
+                        <div class="mb-3">
+                            <label for="textTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="textTitle" placeholder="Enter title">
+                        </div>
+                        <div class="mb-3">
+                            <label for="textContent" class="form-label">Content</label>
+                            <textarea class="form-control" id="textContent" rows="4" placeholder="Enter text..."></textarea>
+                        </div>
+                    </form>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Save changes</button>
+                    <!-- Form 2: Title + Image Upload + Preview -->
+                    <form id="imageForm" class="d-none">
+                        <div class="mb-3">
+                            <label for="imageTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="imageTitle" placeholder="Enter title">
+                        </div>
+                        <div class="mb-3">
+                            <label for="imageUpload" class="form-label">Upload Image</label>
+                            <input class="form-control" type="file" id="imageUpload" accept="image/*">
+                        </div>
+                        <div class="text-center">
+                            <img id="imagePreview" src="" alt="Preview" class="img-fluid rounded d-none" style="max-height: 250px;">
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="form-submit">Save changes</button>
+                </div>
             </div>
         </div>
-    </div>
     </div>
     <div class="container mt-5">
         @yield('content')
@@ -146,6 +146,58 @@
                 imagePreview.classList.add('d-none');
             }
         });
+
+        $(".btn-primary").click(function (e) {
+            e.preventDefault();
+
+            if ($("#formTextBtn").hasClass("active")) {
+
+                var title = $("#textTitle").val();
+                var content = $("#textContent").val();
+
+                $.ajax({
+                    url: '/your-endpoint-for-text',
+                    method: 'POST',
+                    data: {
+                        title: title,
+                        content: content
+                    },
+                    success: function(response) {
+                        console.log(response);
+
+                        $('#exampleModal').modal('hide');
+                    },
+                    error: function(error) {
+                        console.error(error);
+                    }
+                });
+
+            } else if ($("#formImageBtn").hasClass("active")) {
+
+                var imageTitle = $("#imageTitle").val();
+                var imageData = $("#imageUpload")[0].files[0];
+                
+                var formData = new FormData();
+                formData.append("title", imageTitle);
+                formData.append("image", imageData);
+
+                $.ajax({
+                    url: '/your-endpoint-for-image',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        console.log(response);
+
+                        $('#exampleModal').modal('hide');
+                    },
+                    error: function(error) {
+                        console.error(error);
+                    }
+                });
+            }
+        })
     </script>
 </body>
 </html>
