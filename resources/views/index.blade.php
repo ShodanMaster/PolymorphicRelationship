@@ -358,12 +358,6 @@ $(document).ready(function() {
         }
     });
 
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
-
     $("#submit-button").click(function (e) {
         e.preventDefault();
         console.log('clicked');
@@ -406,6 +400,8 @@ $(document).ready(function() {
                         showConfirmButton: false,
                         timer: 2000
                     });
+                    
+                    loadBlogs();
                 },
                 error: function(error) {
                     console.error(error);
@@ -461,6 +457,7 @@ $(document).ready(function() {
                         timer: 2000
                     });
 
+                    loadBlogs();
                 },
                 error: function(error) {
                     console.error(error);
@@ -477,8 +474,6 @@ $(document).ready(function() {
             });
 
         }
-
-        loadBlogs();
     })
 });
 
