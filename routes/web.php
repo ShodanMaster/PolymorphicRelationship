@@ -12,4 +12,6 @@ Route::get('/', function () {
 Route::resource('text-blogs', TextBlogController::class);
 Route::resource('image-blogs', ImageBlogController::class);
 
-Route::post('get-blogs', [IndexController::class, 'getBlogs'])->name('get.blogs');
+Route::get('get-blogs', [IndexController::class, 'getBlogs'])->name('get.blogs');
+
+Route::delete('/blogs/{id}', [IndexController::class, 'destroy'])->name('blogs.destroy');

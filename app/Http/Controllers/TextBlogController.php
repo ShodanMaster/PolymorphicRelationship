@@ -22,14 +22,4 @@ class TextBlogController extends Controller
 
         return response()->json(['message' => 'Text blog post created successfully!'], 201);
     }
-
-    public function delete($id){
-        $textBlog = TextBlog::find($id);
-        if ($textBlog) {
-            $textBlog->delete();
-            return response()->json(['message' => 'Text blog post deleted successfully!'], 200);
-        } else {
-            return response()->json(['message' => 'Text blog post not found!'], 404);
-        }
-    }
 }

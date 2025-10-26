@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ImageBlog;
 use App\Models\TextBlog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class IndexController extends Controller
 {
@@ -14,7 +15,7 @@ class IndexController extends Controller
     }
 
     public function getBlogs(){
-        
+
         $textBlogs = TextBlog::select('id', 'title', 'content', 'created_at')
             ->get()
             ->map(function ($item) {
@@ -35,5 +36,27 @@ class IndexController extends Controller
         return response()->json($sortedBlogs);
     }
 
+    public function destroy(Request $request, $id)
+    {
+        $type = $request->input('type'); // text or image
+
+        if ($type === 'text') {
+            $blog = TextBlog::findOrFail($id);
+            $blog->delete();
+        } elseif ($type === 'image') {
+            $blog = ImageBlog::findOrFail($id);
+
+            // Delete the image file from storage
+            if ($blog->image_path && Storage::disk('public')->exists($blog->image_path)) {
+                Storage::disk('public')->delete($blog->image_path);
+            }
+
+            $blog->delete();
+        } else {
+            return response()->json(['message' => 'Invalid blog type'], 400);
+        }
+
+        return response()->json(['message' => 'Blog deleted successfully']);
+    }
 
 }
