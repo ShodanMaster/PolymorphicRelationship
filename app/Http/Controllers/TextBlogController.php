@@ -15,10 +15,10 @@ class TextBlogController extends Controller
             'content' => 'required|string',
         ]);
 
-        $textBlog = new TextBlog();
-        $textBlog->title = $request->input('title');
-        $textBlog->content = $request->input('content');
-        $textBlog->save();
+        TextBlog::create([
+            'title' => $request->input('title'),
+            'content' => $request->input('content'),
+        ]);
 
         return response()->json(['message' => 'Text blog post created successfully!'], 201);
     }

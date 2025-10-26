@@ -16,10 +16,10 @@ class ImageBlogController extends Controller
 
         $imagePath = $request->file('image')->store('images', 'public');
 
-        $imageBlog = new ImageBlog();
-        $imageBlog->title = $request->input('title');
-        $imageBlog->image_path = $imagePath;
-        $imageBlog->save();
+        ImageBlog::create([
+            'title' => $request->input('title'),
+            'image_path' => $imagePath,
+        ]);
 
         return response()->json(['message' => 'Image blog post created successfully!'], 201);
     }

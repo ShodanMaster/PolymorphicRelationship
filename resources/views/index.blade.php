@@ -128,11 +128,9 @@ $(document).ready(function() {
             }
         });
     }
-
-    // Load first 10 blogs initially
+    
     loadBlogs();
 
-    // Detect scroll to bottom
     $(window).scroll(function() {
         if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
             loadBlogs();
