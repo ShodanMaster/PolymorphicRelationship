@@ -10,6 +10,9 @@
     <div class="row" id="blog-container">
         <!-- Blog cards will appear here -->
     </div>
+    <div id="loading" class="text-center my-3" style="display: none;">
+        <span class="text-muted">Loading...</span>
+    </div>
 </div>
 <div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -67,14 +70,27 @@
 @push('custom-script')
 <script>
 $(document).ready(function() {
+    let offset = 0;
+    const limit = 10;
+    let loading = false;
+
     function loadBlogs() {
+        if (loading) return;
+        loading = true;
+
+        $('#loading').show();
+
         $.ajax({
             url: "{{ route('get.blogs') }}",
             type: "GET",
+            data: { offset: offset },
             dataType: "json",
             success: function(blogs) {
+                $('#loading').hide();
+
+                if (blogs.length === 0) return;
+
                 let container = $('#blog-container');
-                container.empty();
 
                 $.each(blogs, function(index, blog) {
                     let imageHtml = '';
@@ -101,14 +117,27 @@ $(document).ready(function() {
                     `;
                     container.append(card);
                 });
+
+                offset += blogs.length;
+                loading = false;
             },
             error: function(xhr, status, error) {
+                $('#loading').hide();
                 console.error("Error fetching blogs:", error);
+                loading = false;
             }
         });
     }
 
+    // Load first 10 blogs initially
     loadBlogs();
+
+    // Detect scroll to bottom
+    $(window).scroll(function() {
+        if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
+            loadBlogs();
+        }
+    });
 
     $(document).on('click', '.delete-blog', function() {
         let blogId = $(this).data('id');

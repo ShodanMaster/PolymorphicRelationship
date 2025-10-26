@@ -14,7 +14,10 @@ class IndexController extends Controller
         return view('index');
     }
 
-    public function getBlogs(){
+    public function getBlogs(Request $request)
+    {
+        $offset = $request->input('offset', 0);
+        $limit = 10;
 
         $textBlogs = TextBlog::select('id', 'title', 'content', 'created_at')
             ->get()
@@ -30,11 +33,15 @@ class IndexController extends Controller
                 return $item;
             });
 
-        $blogs = $textBlogs->merge($imageBlogs);
-        $sortedBlogs = $blogs->sortByDesc('created_at')->take(10)->values();
+        $blogs = $textBlogs->merge($imageBlogs)
+            ->sortByDesc('created_at')
+            ->values();
 
-        return response()->json($sortedBlogs);
+        $paginatedBlogs = $blogs->slice($offset, $limit)->values();
+
+        return response()->json($paginatedBlogs);
     }
+
 
     public function destroy(Request $request, $id)
     {
