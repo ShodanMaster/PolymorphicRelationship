@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Polymorphic Relationship</title>
     <link rel="stylesheet" href="{{ asset('asset/bootstrap.min.css') }}">
 
@@ -43,7 +44,7 @@
                         </li>
                     </ul>
                     <form class="d-flex mt-3" role="search">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#formModal">
                             Launch demo modal
                         </button>
                     </form>
@@ -51,12 +52,12 @@
             </div>
         </div>
     </nav>
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">Add Content</h1>
+                    <h1 class="modal-title fs-5" id="formModalLabel">Add Content</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
@@ -97,7 +98,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="form-submit">Save changes</button>
+                    <button type="button" class="btn btn-primary" id="submit-button">Save changes</button>
                 </div>
             </div>
         </div>
@@ -108,6 +109,7 @@
 
     <script src="{{ asset('asset/jquery.min.js') }}"></script>
     <script src="{{ asset('asset/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('asset/sweetalert.min.js') }}"></script>
     <script>
         const formTextBtn = document.getElementById('formTextBtn');
         const formImageBtn = document.getElementById('formImageBtn');
@@ -147,16 +149,33 @@
             }
         });
 
-        $(".btn-primary").click(function (e) {
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        $("#submit-button").click(function (e) {
             e.preventDefault();
+            console.log('clicked');
 
             if ($("#formTextBtn").hasClass("active")) {
+                console.log("Text Clicked!");
 
                 var title = $("#textTitle").val();
                 var content = $("#textContent").val();
 
+                if (!title || !content) {
+                    Swal.fire(
+                        'Error!',
+                        'Please fill in all fields.',
+                        'error'
+                    );
+                    return;
+                }
+
                 $.ajax({
-                    url: '/your-endpoint-for-text',
+                    url: '{{ route("text-blogs.store") }}',
                     method: 'POST',
                     data: {
                         title: title,
@@ -165,10 +184,28 @@
                     success: function(response) {
                         console.log(response);
 
-                        $('#exampleModal').modal('hide');
+                        $('#formModal').modal('hide');
+
+                        // Clear form fields
+                        $("#textTitle").val('');
+                        $("#textContent").val('');
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Your text blog has been saved successfully.',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
                     },
                     error: function(error) {
                         console.error(error);
+
+                        Swal.fire(
+                            'Error!',
+                            'Something went wrong while saving your blog.',
+                            'error'
+                        );
                     }
                 });
 
@@ -176,13 +213,22 @@
 
                 var imageTitle = $("#imageTitle").val();
                 var imageData = $("#imageUpload")[0].files[0];
-                
+
+                if (!imageTitle || !imageData) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Missing Data!',
+                        text: 'Please provide both a title and an image.',
+                    });
+                    return;
+                }
+
                 var formData = new FormData();
                 formData.append("title", imageTitle);
                 formData.append("image", imageData);
 
                 $.ajax({
-                    url: '/your-endpoint-for-image',
+                    url: '{{ route("image-blogs.store") }}',
                     method: 'POST',
                     data: formData,
                     processData: false,
@@ -190,14 +236,40 @@
                     success: function(response) {
                         console.log(response);
 
-                        $('#exampleModal').modal('hide');
+                        $('#formModal').modal('hide');
+
+                        $("#imageTitle").val('');
+                        $("#imageUpload").val('');
+
+                        imagePreview.src = '';
+                        imagePreview.classList.add('d-none');
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Your image has been uploaded successfully.',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+
                     },
                     error: function(error) {
                         console.error(error);
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Something went wrong while uploading your image.',
+                        });
+
+                        imagePreview.src = '';
+                        imagePreview.classList.add('d-none');
                     }
                 });
+
             }
         })
     </script>
+    @stack('custom-script')
 </body>
 </html>
