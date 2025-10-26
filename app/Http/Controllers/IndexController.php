@@ -66,4 +66,45 @@ class IndexController extends Controller
         return response()->json(['message' => 'Blog deleted successfully']);
     }
 
+    public function getBlogComments(Request $request, $id)
+    {
+        $offset = $request->input('offset', 0);
+        $limit = $request->input('limit', 10);
+        $type = $request->input('type');
+
+        if ($type === 'text') {
+            $blog = TextBlog::findOrFail($id);
+        } elseif ($type === 'image') {
+            $blog = ImageBlog::findOrFail($id);
+        } else {
+            return response()->json(['error' => 'Invalid blog type'], 400);
+        }
+
+        $comments = $blog->comments()
+            ->orderBy('created_at', 'desc')
+            ->skip($offset)
+            ->take($limit)
+            ->pluck('body');
+
+        return response()->json($comments);
+    }
+
+    public function addBlogComment(Request $request, $id){
+        $type = $request->input('type');
+        $text = $request->input('text');
+
+        if ($type === 'text') {
+            $blog = TextBlog::findOrFail($id);
+        } elseif ($type === 'image') {
+            $blog = ImageBlog::findOrFail($id);
+        } else {
+            return response()->json(['error' => 'Invalid blog type'], 400);
+        }
+
+        $comment = $blog->comments()->create([
+            'body' => $text,
+        ]);
+
+        return response()->json(["body" => $comment->body], 201);
+    }
 }

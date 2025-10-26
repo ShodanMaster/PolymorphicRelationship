@@ -65,6 +65,35 @@
         </div>
     </div>
 </div>
+
+<!-- Blog Modal -->
+<div class="modal fade" id="blogModal" tabindex="-1" aria-labelledby="blogModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="blogModalLabel"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="blogModalContent" class="mb-3"></div>
+        <hr>
+
+        <!-- Comments Section -->
+        <h6>Comments</h6>
+        <div id="commentsContainer"></div>
+        <button id="loadMoreComments" class="btn btn-link">Show more comments</button>
+
+        <hr>
+        <div class="mb-3">
+          <textarea id="newCommentText" class="form-control" rows="2" placeholder="Write a comment..."></textarea>
+          <button id="addCommentBtn" class="btn btn-primary btn-sm mt-2">Post Comment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 @endsection
 
 @push('custom-script')
@@ -110,7 +139,19 @@ $(document).ready(function() {
                                 <div class="card-body">
                                     <h5 class="card-title">${blog.title}</h5>
                                     ${textHtml}
-                                    <button class="btn btn-danger btn-sm mt-2 delete-blog" data-id="${blog.id}" data-type="${blog.type}">Delete</button>
+                                    <div class="d-flex justify-content-between">
+                                        <button class="btn btn-info btn-sm mt-2 view-blog"
+                                                data-id="${blog.id}"
+                                                data-type="${blog.type}"
+                                                data-title="${blog.title}"
+                                                data-content="${blog.content || ''}"
+                                                data-image="${blog.image_path || ''}">
+                                            View Post
+                                        </button>
+
+                                        <button class="btn btn-danger btn-sm mt-2 delete-blog" data-id="${blog.id}" data-type="${blog.type}">Delete</button>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -128,7 +169,7 @@ $(document).ready(function() {
             }
         });
     }
-    
+
     loadBlogs();
 
     $(window).scroll(function() {
@@ -178,6 +219,106 @@ $(document).ready(function() {
             }
         });
     });
+
+    let commentOffset = 0;
+    const commentLimit = 10;
+    let currentBlogId = null;
+    let currentBlogType = null;
+
+    $(document).on('click', '.view-blog', function() {
+        currentBlogId = $(this).data('id');
+        currentBlogType = $(this).data('type');
+        commentOffset = 0;
+        $('#commentsContainer').empty();
+        $('#newCommentText').val('');
+        $('#loadMoreComments').show();
+
+        const title = $(this).data('title');
+        const type = $(this).data('type');
+        const content = $(this).data('content');
+        const image = $(this).data('image');
+
+        $('#blogModalLabel').text(title);
+
+        if (type === 'image') {
+            $('#blogModalContent').html(`<img src="/storage/${image}" class="img-fluid" alt="${title}">`);
+        } else {
+            $('#blogModalContent').html(`<p>${content}</p>`);
+        }
+
+        // Load first 10 comments
+        loadComments();
+
+        $('#blogModal').modal('show');
+    });
+
+    function loadComments() {
+        $.ajax({
+            url: `/blogs/${currentBlogId}/comments`,
+            type: 'GET',
+            data: { offset: commentOffset, limit: commentLimit, type: currentBlogType },
+            dataType: 'json',
+            success: function(comments) {
+
+                if (comments.length === 0 && commentOffset === 0) {
+                    $('#commentsContainer').html('<p class="text-muted">No comments yet.</p>');
+                    $('#loadMoreComments').hide();
+                    return;
+                }
+
+                comments.forEach(comment => {
+                    $('#commentsContainer').append(`
+                        <div class="border rounded p-2 mb-2 bg-light">
+                            <span>${comment}</span>
+                        </div>
+                    `);
+                });
+
+                commentOffset += comments.length;
+
+                if (comments.length < commentLimit) {
+                    $('#loadMoreComments').hide();
+                } else {
+                    $('#loadMoreComments').show();
+                }
+            },
+            error: function(err) {
+                console.error(err);
+            }
+        });
+    }
+
+
+    $('#loadMoreComments').click(function() {
+        loadComments();
+    });
+
+    $('#addCommentBtn').click(function() {
+        let text = $('#newCommentText').val().trim();
+        if (!text) return;
+
+        $.ajax({
+            url: `/blogs/${currentBlogId}/comments`,
+            type: 'POST',
+            data: {
+                text: text,
+                type: currentBlogType
+            },
+            success: function(comment) {
+                $('#commentsContainer').prepend(`
+                    <div class="border rounded p-2 mb-2 bg-light">
+                        <span>${comment.body}</span>
+                    </div>
+                `);
+                $('#newCommentText').val('');
+            },
+            error: function(err) {
+                console.error(err);
+            }
+        });
+    });
+
+
 
     const formTextBtn = document.getElementById('formTextBtn');
     const formImageBtn = document.getElementById('formImageBtn');
